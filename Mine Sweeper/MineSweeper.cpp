@@ -30,10 +30,7 @@ typedef std::map<std::pair<uint32, uint32>, bool> AvailablePoints; // TODO: bool
 AvailablePoints sAvailablePointsStore; // Contenedor usado para sacar puntos randoms
 std::vector<std::pair<uint32, uint32>> sMinesStore; // Posiciones de las minas.
 
-void InitializeRandom()
-{
-	std::srand(std::time(nullptr));
-}
+inline void InitializeRandom() { std::srand(std::time(nullptr)); }
 
 void InitializeAvailablePointsContainer(int r, int c)
 {
