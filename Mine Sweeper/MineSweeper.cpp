@@ -7,8 +7,6 @@
 typedef uint8_t uint8;
 typedef uint32_t uint32;
 
-
-
 struct Point // TODO: buscar manera de eliminar adyacentes con este struct. 
 {
 	uint32 x;	// Coordenada x
@@ -21,21 +19,56 @@ struct Point // TODO: buscar manera de eliminar adyacentes con este struct.
 	}
 };
 
-// TODO: las filas, columnas y minas se calculan a partir de la dificultad escogida.
-uint8 const MAX_COLUMNS = 30;
-uint8 const MAX_ROWS	= 16;
-uint8 const MAX_MINAS 	= 99;
+uint8 MAX_COLUMNS 	= 8;
+uint8 MAX_ROWS		= 8;
+uint8 MAX_MINAS 	= 10;
 
-typedef std::map<std::pair<uint32, uint32>, bool> AvailablePoints; // TODO: bool no se utiliza. Se usa map porque con vector por alguna razon no elimina bien el elemento del vector.
+enum Difficulty
+{
+	GAME_DIFFICULTY_EASY,
+	GAME_DIFFICULTY_MEDIUM,
+	GAME_DIFFICULTY_HARD
+};
+
+std::vector<std::vector<char>>  sBoard; // Tablero del juego
+typedef std::map<std::pair<uint8, uint8>, bool> AvailablePoints; // TODO: actualmente se usa tambien para la funcion Discover. Deberia crearse otro contenedor?
 AvailablePoints sAvailablePointsStore; // Contenedor usado para sacar puntos randoms
-std::vector<std::pair<uint32, uint32>> sMinesStore; // Posiciones de las minas.
+std::vector<std::pair<uint8, uint8>> sMinesStore; // Posiciones de las minas.
+
+void SetRowsColumnsMinesByDifficulty(uint8 difficulty)
+{
+	switch(difficulty)
+	{
+		case GAME_DIFFICULTY_EASY:
+			MAX_COLUMNS = 8;
+			MAX_ROWS = 8;
+			MAX_MINAS = 10;
+			break;
+
+		case GAME_DIFFICULTY_MEDIUM:
+			MAX_COLUMNS = 16;
+			MAX_ROWS = 16;
+			MAX_MINAS = 40;
+			break;
+
+		case GAME_DIFFICULTY_HARD:
+			MAX_COLUMNS = 30;
+			MAX_ROWS = 16;
+			MAX_MINAS = 99;
+			break;
+
+		default:
+			break;
+	}
+	sBoard.resize(MAX_ROWS, std::vector<char>(MAX_COLUMNS));
+}
 
 inline void InitializeRandom() { std::srand(std::time(nullptr)); }
 
 void InitializeAvailablePointsContainer(int r, int c)
 {
-	for(uint32 i = 0; i < MAX_ROWS; ++i)
-		for(uint32 j = 0; j < MAX_COLUMNS; ++j)
+	for(uint8 i = 0; i < MAX_ROWS; ++i)
+		for(uint8 j = 0; j < MAX_COLUMNS; ++j)
 			sAvailablePointsStore[{i, j}] = true; // Punto disponible
 
 	// Filtramos al rededores del punto del player
@@ -49,16 +82,12 @@ void ShowAvailablePoints()
 {
 	uint32 total = 0;
 	for(AvailablePoints::iterator itr = sAvailablePointsStore.begin(); itr != sAvailablePointsStore.end(); ++itr)
-	{
-		// itr->first->ToString();
 		printf("Pareja %d: {%d, %d}\n", ++total, itr->first.first, itr->first.second);
-	}
 }
 
-std::vector<std::vector<char>>  sBoard(MAX_ROWS, std::vector<char>(MAX_COLUMNS)); // Tablero del juego
-/*Point**/void InitializeMinesPositions(uint32 totalMines)
+void InitializeMinesPositions()
 {
-	for(uint32 i = 0; i < totalMines; ++i)
+	for(uint8 i = 0; i < MAX_MINAS; ++i)
 	{
 		AvailablePoints::const_iterator itr = sAvailablePointsStore.begin();
 		std::advance(itr, std::rand() % sAvailablePointsStore.size());
@@ -83,9 +112,9 @@ void Discover(int r, int c)
 
 void ShowBoard()
 {
-	for(uint32 i = 0; i < MAX_ROWS; ++i)
+	for(uint8 i = 0; i < MAX_ROWS; ++i)
 	{
-		for(uint32 j = 0; j < MAX_COLUMNS; ++j)
+		for(uint8 j = 0; j < MAX_COLUMNS; ++j)
 		{
 			char c = sBoard[i][j];
 			if(c != '*')
@@ -111,18 +140,15 @@ Abajo: +fila =columna x + 1, y
 abajo derecha: +fila +col x + 1, y + 1
 */
 
-uint32 const MAX_MOVES = 8; // Unused
-
 void CalcMinas()
 {
-	for(std::pair<uint32, uint32> pos : sMinesStore)
+	for(std::pair<uint8, uint8> pos : sMinesStore)
 	{
 		int x = pos.first;
 		int y = pos.second;
 		for(int i = x - 1; i < x + 2; ++i)
 			for(int j = y - 1; j < y + 2; ++j)
 			{
-				if(x == i && y == j) continue;
 				if(i >= 0 && j >= 0 && i < MAX_ROWS && j < MAX_COLUMNS)
 					if(sBoard[i][j] != '*')
 						sBoard[i][j]++;
@@ -132,13 +158,12 @@ void CalcMinas()
 
  int main()
 {
+	SetRowsColumnsMinesByDifficulty(0);
 	InitializeRandom();
-	InitializeAvailablePointsContainer(5,5);
-	InitializeMinesPositions(MAX_MINAS);
-	// InitializeBoard();
+	InitializeAvailablePointsContainer(5,5); // TODO: preguntar al player por punto inicial.
+	InitializeMinesPositions();
 	CalcMinas();
 	ShowBoard();
-	//ShowAvailablePoints();
 
   	return 0;
 }
