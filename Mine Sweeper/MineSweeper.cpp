@@ -22,9 +22,9 @@ struct Point // TODO: buscar manera de eliminar adyacentes con este struct.
 };
 
 // TODO: las filas, columnas y minas se calculan a partir de la dificultad escogida.
-uint8 const MAX_COLUMNS = 10;
-uint8 const MAX_ROWS	= 10;
-uint8 const MAX_MINAS 	= 10;
+uint8 const MAX_COLUMNS = 30;
+uint8 const MAX_ROWS	= 16;
+uint8 const MAX_MINAS 	= 99;
 
 typedef std::map<std::pair<uint32, uint32>, bool> AvailablePoints; // TODO: bool no se utiliza. Se usa map porque con vector por alguna razon no elimina bien el elemento del vector.
 AvailablePoints sAvailablePointsStore; // Contenedor usado para sacar puntos randoms
@@ -50,8 +50,12 @@ void InitializeAvailablePointsContainer(int r, int c)
 
 void ShowAvailablePoints()
 {
-	for(AvailablePoints::const_iterator itr = sAvailablePointsStore.begin(); itr != sAvailablePointsStore.end(); ++itr)
-		itr->first;//->ToString();
+	uint32 total = 0;
+	for(AvailablePoints::iterator itr = sAvailablePointsStore.begin(); itr != sAvailablePointsStore.end(); ++itr)
+	{
+		// itr->first->ToString();
+		printf("Pareja %d: {%d, %d}\n", ++total, itr->first.first, itr->first.second);
+	}
 }
 
 std::vector<std::vector<char>>  sBoard(MAX_ROWS, std::vector<char>(MAX_COLUMNS)); // Tablero del juego
@@ -66,13 +70,19 @@ std::vector<std::vector<char>>  sBoard(MAX_ROWS, std::vector<char>(MAX_COLUMNS))
 		sMinesStore.push_back(itr->first);
 		sBoard[itr->first.first][itr->first.second]	= '*';
 	}
+	sAvailablePointsStore.clear(); // Aprovechamos el mapa para el discover
 }
 
-void Discover()
+void Discover(int r, int c)
 {
-
+	if(sAvailablePointsStore[{r, c}]) return; // Punto ya explorado no se chequea.
+	sAvailablePointsStore[{r, c}] = true;
+	for(int i = r - 1; i < r + 2; ++i)
+		for(int j = c - 1; j < c + 2; ++j)
+			if(i >= 0 && j >= 0 && i < MAX_ROWS && j < MAX_COLUMNS)
+				if(sBoard[i][j] == 0)
+					Discover(i, j);		
 }
-
 
 void ShowBoard()
 {
@@ -90,7 +100,6 @@ void ShowBoard()
 	}
 }
 
-
 /* 
 arriba izquierda: -fila -col x - 1, y - 1
 Arriba: -fila =columna x - 1, y
@@ -103,7 +112,6 @@ Derecha: =fila +columna x, y + 1
 abajo izquierda: +fila -col x + 1, y - 1
 Abajo: +fila =columna x + 1, y
 abajo derecha: +fila +col x + 1, y + 1
-
 */
 
 uint32 const MAX_MOVES = 8; // Unused
@@ -133,6 +141,7 @@ void CalcMinas()
 	// InitializeBoard();
 	CalcMinas();
 	ShowBoard();
+	//ShowAvailablePoints();
 
   	return 0;
 }
