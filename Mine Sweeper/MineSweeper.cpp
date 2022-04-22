@@ -33,7 +33,7 @@ enum Difficulty
 std::vector<std::vector<char>>  sBoard; // Tablero del juego
 typedef std::map<std::pair<uint8, uint8>, bool> AvailablePoints; // TODO: actualmente se usa tambien para la funcion Discover. Deberia crearse otro contenedor?
 AvailablePoints sAvailablePointsStore; // Contenedor usado para sacar puntos randoms
-std::vector<std::pair<uint8, uint8>> sMinesStore; // Posiciones de las minas.
+std::vector<std::pair<uint32, uint32>> sMinesStore; // Posiciones de las minas.
 
 void SetRowsColumnsMinesByDifficulty(uint8 difficulty)
 {
