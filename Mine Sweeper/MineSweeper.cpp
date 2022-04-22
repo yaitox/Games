@@ -208,6 +208,7 @@ void AskUserForDifficulty()
 
 void AskUserForMove()
 {
+	ShowBoard();
 	std::cout << "Realiza un movimiento: ";
 	uint32 x, y; std::cin >> x >> y;
 
@@ -228,7 +229,6 @@ inline void RegisterMoveOnBoard() { Discover(playerMove->x, playerMove->y); }
 {
 	InitializeRandom();
 	AskUserForDifficulty();
-	ShowBoard();
 	AskUserForMove();
 	InitializeAvailablePointsContainer();
 	InitializeMinesPositions();
