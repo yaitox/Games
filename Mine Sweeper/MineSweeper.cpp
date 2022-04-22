@@ -170,17 +170,18 @@ bool IsValidInput(uint32 mode, std::vector<uint32> inputContainer)
 	{
 		case INPUT_MODE_DIFFICULTY:
 		{
-			for(uint32 input : inputContainer)
-				if(input < GAME_DIFFICULTY_EASY || input > GAME_DIFFICULTY_HARD)
-					return false;
+			uint32 difficulty = inputContainer[0]
+			if(difficulty < GAME_DIFFICULTY_EASY || difficulty > GAME_DIFFICULTY_HARD)
+				return false;
 			break;
 		}
 
 		case INPUT_MODE_MOVE:
 		{
-			for(uint32 input : inputContainer)
-				if(input < 0 || input > MAX_COLUMNS || input > MAX_ROWS)
-					return false;
+			uint32 x = inputContainer[0];
+			uint32 y = inputContainer[1];
+			if(x < 0 || y < 0 || x > MAX_ROWS || y > MAX_COLUMNS)
+				return false;
 			break;
 		}
 
