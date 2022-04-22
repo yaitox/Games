@@ -180,7 +180,7 @@ bool IsValidInput(uint32 mode, std::vector<uint32> inputContainer)
 		{
 			uint32 x = inputContainer[0];
 			uint32 y = inputContainer[1];
-			if(x < 0 || y < 0 || x > MAX_ROWS || y > MAX_COLUMNS)
+			if(x < 0 || y < 0 || x >= MAX_ROWS || y >= MAX_COLUMNS)
 				return false;
 			break;
 		}
