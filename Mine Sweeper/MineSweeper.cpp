@@ -34,7 +34,7 @@ typedef std::map<Point*, bool> AvailablePoints;
 AvailablePoints sAvailablePointsStore; // Contenedor usado para sacar puntos randoms
 std::vector<Point*> sMinesStore; // Posiciones de las minas.
 AvailablePoints sPointsAlreadyKnown;
-std::vector<Point*> sPointContainer;
+std::vector<std::vector<Point*>> sPointContainer;
 Point* playerMove = new Point(-1, -1);
 
 void SetRowsColumnsMinesByDifficulty(uint32 difficulty)
@@ -63,17 +63,12 @@ void SetRowsColumnsMinesByDifficulty(uint32 difficulty)
 			break;
 	}
 	sBoard.resize(MAX_ROWS, std::vector<uint32>(MAX_COLUMNS));
+	sPointContainer.resize(MAX_ROWS, std::vector<Point*>(MAX_COLUMNS));
 }
 
 inline void InitializeRandom() { std::srand(std::time(nullptr)); }
 
-Point* GetPoint(int r, int c)
-{
-	for(std::vector<Point*>::iterator itr = sPointContainer.begin(); itr != sPointContainer.end(); ++itr)
-		if((*itr)->x == r && (*itr)->y == c)
-			return (*itr);
-	return NULL;
-}
+inline Point* GetPoint(int r, int c) { return sPointContainer[r][c]; }
 
 void InitializeAvailablePointsContainer()
 {
@@ -85,7 +80,7 @@ void InitializeAvailablePointsContainer()
 		{
 			Point* point = new Point(i, j);
 			sAvailablePointsStore[point] = true; // Punto disponible
-			sPointContainer.push_back(point);
+			sPointContainer[i][j] = point;
 		}
 	
 	// Filtramos al rededores del punto del player
