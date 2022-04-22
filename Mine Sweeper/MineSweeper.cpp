@@ -170,7 +170,7 @@ bool IsValidInput(uint32 mode, std::vector<uint32> inputContainer)
 	{
 		case INPUT_MODE_DIFFICULTY:
 		{
-			uint32 difficulty = inputContainer[0]
+			uint32 difficulty = inputContainer[0];
 			if(difficulty < GAME_DIFFICULTY_EASY || difficulty > GAME_DIFFICULTY_HARD)
 				return false;
 			break;
