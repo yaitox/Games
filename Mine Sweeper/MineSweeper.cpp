@@ -30,7 +30,7 @@ enum Difficulty
 };
 
 std::vector<std::vector<uint32>>  sBoard; // Tablero del juego
-typedef std::map<Point*, bool> AvailablePoints; // TODO: actualmente se usa tambien para la funcion Discover. Deberia crearse otro contenedor?
+typedef std::map<Point*, bool> AvailablePoints;
 AvailablePoints sAvailablePointsStore; // Contenedor usado para sacar puntos randoms
 std::vector<Point*> sMinesStore; // Posiciones de las minas.
 AvailablePoints sPointsAlreadyKnown;
@@ -88,15 +88,13 @@ void InitializeAvailablePointsContainer(int r, int c)
 	for(int i = r - 1; i < r + 2; ++i)
 		for(int j = c - 1; j < c + 2; ++j)
 			if(i >= 0 && j >= 0 && i < MAX_ROWS && j < MAX_COLUMNS)
-				sAvailablePointsStore.erase(GetPoint(i, j)); // Borra tambien negativos, aunque no existen.*/
+				sAvailablePointsStore.erase(GetPoint(i, j));
 }
 
 void ShowAvailablePoints()
 {
-	//uint32 total = 0;
 	for(AvailablePoints::iterator itr = sAvailablePointsStore.begin(); itr != sAvailablePointsStore.end(); ++itr)
 		itr->first->ToString();
-		//printf("Pareja %d: {%d, %d}\n", ++total, itr->first.first, itr->first.second);
 }
 
 void InitializeMinesPositions()
@@ -108,10 +106,8 @@ void InitializeMinesPositions()
 		sAvailablePointsStore.erase(itr->first);
 
 		sMinesStore.push_back(itr->first);
-		//std::cout << itr->first.first << ' ' << itr->first.second << std::endl;
 		sBoard[itr->first->x][itr->first->y]	= '*';
 	}
-	//sAvailablePointsStore.clear(); // Aprovechamos el mapa para el discover
 }
 
 void Discover(int r, int c)
@@ -248,7 +244,7 @@ void RegisterMoveOnBoard(std::vector<uint32> moves)
 	ShowBoard();
 	std::vector<uint32> moves = AskUserForMove();
 	InitializeAvailablePointsContainer(moves[0], moves[1]);
-	InitializeMinesPositions(); // Por alguna razon a veces se peta el programa con 0.
+	InitializeMinesPositions();
 	CalcMinas();
 	RegisterMoveOnBoard(moves);
 	ShowBoard();
