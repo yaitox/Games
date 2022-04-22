@@ -1,4 +1,4 @@
-#include <vector>
+	#include <vector>
 #include <iostream>
 #include <ctime>
 #include <map>
@@ -35,6 +35,7 @@ AvailablePoints sAvailablePointsStore; // Contenedor usado para sacar puntos ran
 std::vector<Point*> sMinesStore; // Posiciones de las minas.
 AvailablePoints sPointsAlreadyKnown;
 std::vector<Point*> sPointContainer;
+Point* playerMove = new Point(-1, -1);
 
 void SetRowsColumnsMinesByDifficulty(uint32 difficulty)
 {
@@ -74,8 +75,11 @@ Point* GetPoint(int r, int c)
 	return NULL;
 }
 
-void InitializeAvailablePointsContainer(int r, int c)
+void InitializeAvailablePointsContainer()
 {
+	uint32 r = playerMove->x;
+	uint32 c = playerMove->y;
+
 	for(uint32 i = 0; i < MAX_ROWS; ++i)
 		for(uint32 j = 0; j < MAX_COLUMNS; ++j)
 		{
@@ -144,11 +148,9 @@ void ShowBoard()
 arriba izquierda: -fila -col x - 1, y - 1
 Arriba: -fila =columna x - 1, y
 arriba derecha: -fila +col x - 1, y + 1
-
 Izquierda: =fila -columna x, y - 1
 Yo mismo x, y
 Derecha: =fila +columna x, y + 1
-
 abajo izquierda: +fila -col x + 1, y - 1
 Abajo: +fila =columna x + 1, y
 abajo derecha: +fila +col x + 1, y + 1
@@ -208,16 +210,16 @@ void AskUserForDifficulty()
 
 	uint32 diff; std::cin >> diff;
 
-	if(IsValidInput(INPUT_MODE_DIFFICULTY, { diff }))
-		SetRowsColumnsMinesByDifficulty(diff);
-	else
+	if(!IsValidInput(INPUT_MODE_DIFFICULTY, { diff }))
 	{
 		system("cls");
 		AskUserForDifficulty();
-	}	
+		return;
+	}
+	SetRowsColumnsMinesByDifficulty(diff);
 }
 
-std::vector<uint32> AskUserForMove()
+void AskUserForMove()
 {
 	std::cout << "Realiza un movimiento: ";
 	uint32 x, y; std::cin >> x >> y;
@@ -226,29 +228,26 @@ std::vector<uint32> AskUserForMove()
 	{
 		system("cls");
 		AskUserForMove();
+		return;
 	}
-	return {x, y};
+	playerMove->x = x;
+	playerMove->y = y;
 }
 
-void RegisterMoveOnBoard(std::vector<uint32> moves)
-{
-	uint32 x = moves[0];
-	uint32 y = moves[1];
-	Discover(x, y);
-}
+// Deberia ser inline ?
+inline void RegisterMoveOnBoard() { Discover(playerMove->x, playerMove->y); }
 
  int main()
 {
 	InitializeRandom();
 	AskUserForDifficulty();
 	ShowBoard();
-	std::vector<uint32> moves = AskUserForMove();
-	InitializeAvailablePointsContainer(moves[0], moves[1]);
+	AskUserForMove();
+	InitializeAvailablePointsContainer();
 	InitializeMinesPositions();
 	CalcMinas();
-	RegisterMoveOnBoard(moves);
+	RegisterMoveOnBoard();
 	ShowBoard();
-	
 
   	return 0;
 }
