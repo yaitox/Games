@@ -1,4 +1,4 @@
-	#include <vector>
+#include <vector>
 #include <iostream>
 #include <ctime>
 #include <map>
@@ -87,7 +87,7 @@ void InitializeAvailablePointsContainer()
 			sAvailablePointsStore[point] = true; // Punto disponible
 			sPointContainer.push_back(point);
 		}
-
+	
 	// Filtramos al rededores del punto del player
 	for(int i = r - 1; i < r + 2; ++i)
 		for(int j = c - 1; j < c + 2; ++j)
@@ -144,18 +144,6 @@ void ShowBoard()
 	}
 }
 
-/* 
-arriba izquierda: -fila -col x - 1, y - 1
-Arriba: -fila =columna x - 1, y
-arriba derecha: -fila +col x - 1, y + 1
-Izquierda: =fila -columna x, y - 1
-Yo mismo x, y
-Derecha: =fila +columna x, y + 1
-abajo izquierda: +fila -col x + 1, y - 1
-Abajo: +fila =columna x + 1, y
-abajo derecha: +fila +col x + 1, y + 1
-*/
-
 void CalcMinas()
 {
 	for(Point* point : sMinesStore)
@@ -164,11 +152,9 @@ void CalcMinas()
 		int y = point->y;
 		for(int i = x - 1; i < x + 2; ++i)
 			for(int j = y - 1; j < y + 2; ++j)
-			{
 				if(i >= 0 && j >= 0 && i < MAX_ROWS && j < MAX_COLUMNS)
 					if(sBoard[i][j] != '*')
-						sBoard[i][j]++;
-			}
+						sBoard[i][j]++;		
 	}
 }
 
