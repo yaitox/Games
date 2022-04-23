@@ -72,8 +72,8 @@ inline Point* GetPoint(int r, int c) { return sPointContainer[r][c]; }
 
 void InitializeAvailablePointsContainer()
 {
-	uint32 r = playerMove->x;
-	uint32 c = playerMove->y;
+	int r = (int)playerMove->x;
+	int c = (int)playerMove->y;
 
 	for(uint32 i = 0; i < MAX_ROWS; ++i)
 		for(uint32 j = 0; j < MAX_COLUMNS; ++j)
