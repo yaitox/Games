@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ctime>
 #include <map>
+#include <algorithm>
 
 typedef uint8_t uint8;
 typedef uint32_t uint32;
@@ -31,7 +32,7 @@ enum Difficulty
 
 std::vector<std::vector<uint32>>  sBoard; // Tablero del juego
 typedef std::map<Point*, bool> AvailablePoints;
-AvailablePoints sAvailablePointsStore; // Contenedor usado para sacar puntos randoms
+std::vector<Point*> sAvailablePointsStore; // Contenedor usado para sacar puntos randoms
 std::vector<Point*> sMinesStore; // Posiciones de las minas.
 AvailablePoints sPointsAlreadyKnown;
 std::vector<std::vector<Point*>> sPointContainer;
@@ -54,7 +55,6 @@ void SetRowsColumnsMinesByDifficulty(uint32 difficulty)
 			break;
 
 		case GAME_DIFFICULTY_HARD:
-			MAX_COLUMNS = 30;
 			MAX_ROWS = 16;
 			MAX_MINAS = 99;
 			break;
@@ -72,14 +72,14 @@ inline Point* GetPoint(int r, int c) { return sPointContainer[r][c]; }
 
 void InitializeAvailablePointsContainer()
 {
-	uint32 r = playerMove->x;
-	uint32 c = playerMove->y;
+	int r = playerMove->x;
+	int c = playerMove->y;
 
 	for(uint32 i = 0; i < MAX_ROWS; ++i)
 		for(uint32 j = 0; j < MAX_COLUMNS; ++j)
 		{
 			Point* point = new Point(i, j);
-			sAvailablePointsStore[point] = true; // Punto disponible
+			sAvailablePointsStore.push_back(point); // Punto disponible
 			sPointContainer[i][j] = point;
 		}
 	
@@ -87,25 +87,25 @@ void InitializeAvailablePointsContainer()
 	for(int i = r - 1; i < r + 2; ++i)
 		for(int j = c - 1; j < c + 2; ++j)
 			if(i >= 0 && j >= 0 && i < MAX_ROWS && j < MAX_COLUMNS)
-				sAvailablePointsStore.erase(GetPoint(i, j));
+				sAvailablePointsStore.erase(std::find(sAvailablePointsStore.begin(), sAvailablePointsStore.end(), GetPoint(i, j)));	
 }
 
 void ShowAvailablePoints()
 {
-	for(AvailablePoints::iterator itr = sAvailablePointsStore.begin(); itr != sAvailablePointsStore.end(); ++itr)
-		itr->first->ToString();
+	for(std::vector<Point*>::iterator itr = sAvailablePointsStore.begin(); itr != sAvailablePointsStore.end(); ++itr)
+		(*itr)->ToString();
 }
 
 void InitializeMinesPositions()
 {
 	for(uint8 i = 0; i < MAX_MINAS; ++i)
 	{
-		AvailablePoints::iterator itr = sAvailablePointsStore.begin();
+		std::vector<Point*>::iterator itr = sAvailablePointsStore.begin();
 		std::advance(itr, std::rand() % sAvailablePointsStore.size());
-		sAvailablePointsStore.erase(itr->first);
+		sAvailablePointsStore.erase(itr);
 
-		sMinesStore.push_back(itr->first);
-		sBoard[itr->first->x][itr->first->y]	= '*';
+		sMinesStore.push_back((*itr));
+		sBoard[(*itr)->x][(*itr)->y]	= '*';
 	}
 }
 
