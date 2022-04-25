@@ -37,6 +37,7 @@ std::vector<Point*> sMinesStore; // Posiciones de las minas.
 AvailablePoints sPointsAlreadyKnown;
 std::vector<std::vector<Point*>> sPointContainer;
 Point* playerMove = new Point(-1, -1);
+bool canPlay = true;
 
 void SetRowsColumnsMinesByDifficulty(uint32 difficulty)
 {
@@ -123,6 +124,7 @@ void InitializeMinesPositions()
 		sBoard[(*itr)->x][(*itr)->y] = '*';
 		sAvailablePointsStore.erase(itr);
 	}
+	CalcMinas();
 }
 
 void Discover(int r, int c)
@@ -144,12 +146,23 @@ void ShowBoard()
 	{
 		for(uint8 j = 0; j < MAX_COLUMNS; ++j)
 		{
-			if(sPointsAlreadyKnown[GetPoint(i, j)] == false || sBoard[i][j] == '*')
+			if(canPlay)
 			{
-				std::cout << "- ";
-				continue;
+				if(sPointsAlreadyKnown[GetPoint(i, j)] == false)
+				{
+					std::cout << "- ";
+					continue;
+				}
+				std::cout << sBoard[i][j] << ' ';				
 			}
-			std::cout << sBoard[i][j] << ' ';
+
+			else
+			{
+				if(sBoard[i][j] == '*')
+					std::cout << '*' << ' ';
+				else
+					std::cout << sBoard[i][j] << ' ';
+			}
 		}
 		std::cout << std::endl;		
 	}
@@ -203,6 +216,18 @@ void AskUserForDifficulty()
 	SetRowsColumnsMinesByDifficulty(diff);
 }
 
+void Initialize()
+{
+	InitializeAvailablePointsContainer();
+	InitializeMinesPositions();
+}
+
+// Deberia ser inline ?
+inline void RegisterMoveOnBoard() { Discover(playerMove->x, playerMove->y); }
+
+inline bool IsPlayerOnMine() { return sBoard[playerMove->x][playerMove->y] != '*'; }
+
+// TODO: implementar poder meter banderas en las casillas
 void AskUserForMove()
 {
 	ShowBoard();
@@ -217,21 +242,34 @@ void AskUserForMove()
 	}
 	playerMove->x = x;
 	playerMove->y = y;
+	canPlay = IsPlayerOnMine();
 }
 
-// Deberia ser inline ?
-inline void RegisterMoveOnBoard() { Discover(playerMove->x, playerMove->y); }
+// Siempre sigue esta logica: pedimos, registramos, mostramos.
+void PlayGame()
+{
+	system("cls");
+	if(!canPlay)
+	{
+		ShowBoard();
+		std::cout << "HAS PERDIDO!" << std::endl;
+		system("pause");
+		return;
+	}
+	AskUserForMove();
+	RegisterMoveOnBoard();
+	ShowBoard();
+	PlayGame();
+}
 
  int main()
 {
 	InitializeRandom();
 	AskUserForDifficulty();
 	AskUserForMove();
-	InitializeAvailablePointsContainer();
-	InitializeMinesPositions();
-	CalcMinas();
+	Initialize();
 	RegisterMoveOnBoard();
-	ShowBoard();
+	PlayGame();
 
   	return 0;
 }
