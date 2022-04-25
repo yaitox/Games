@@ -55,6 +55,7 @@ void SetRowsColumnsMinesByDifficulty(uint32 difficulty)
 			break;
 
 		case GAME_DIFFICULTY_HARD:
+			MAX_COLUMNS = 30;
 			MAX_ROWS = 16;
 			MAX_MINAS = 99;
 			break;
