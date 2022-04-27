@@ -1,7 +1,5 @@
 #include <vector>
 #include <ctime>
-#include <map>
-#include <algorithm>
 #include "Board.h"
 
 std::vector<std::vector<Point*>>  sBoard; // Tablero del juego
