@@ -34,3 +34,15 @@ enum class GameDifficulty : uint8
 	Medium,
 	Hard
 };
+
+class Board
+{
+	std::vector<std::vector<Point*>> m_board;
+	std::vector<Point*> m_mines;
+
+	Board(uint32 rows, uint32 columns);
+	void AddPoint(Point* point);
+	void CalcNearMines();
+	void GetPoint(uint32 r, uint32 c);
+	void ShowBoard();
+};
