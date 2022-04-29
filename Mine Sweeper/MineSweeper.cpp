@@ -2,12 +2,17 @@
 #include <ctime>
 #include "Board.h"
 
-std::vector<std::vector<Point*>>  sBoard; // Tablero del juego
 std::vector<Point*> sAvailablePointsStore; // Contenedor usado para sacar puntos randoms
 std::vector<Point*> sMinesStore; // Posiciones de las minas.
-Point* playerMove = nullptr;
 
-void SetRowsColumnsMinesByDifficulty(GameDifficulty difficulty)
+Point* playerMove = nullptr;
+Board* sBoard = nullptr;
+
+uint8 MAX_COLUMNS = 8;
+uint8 MAX_ROWS = 8;
+uint8 MAX_MINAS = 10;
+
+void SetBoardSizeByDifficulty(GameDifficulty difficulty)
 {
 	switch (difficulty)
 	{
@@ -32,58 +37,20 @@ void SetRowsColumnsMinesByDifficulty(GameDifficulty difficulty)
 		default:
 			break;
 	}
-	sBoard.resize(MAX_ROWS, std::vector<Point*>(MAX_COLUMNS));
+	sBoard = new Board(MAX_ROWS, MAX_COLUMNS);
 }
 
 inline void InitializeRandom() { std::srand((unsigned int)std::time(nullptr)); }
 
-enum InputMode
-{
-	INPUT_MODE_DIFFICULTY,
-	INPUT_MODE_MOVE
-};
-
-bool IsValidInput(uint32 mode, std::vector<int> inputContainer)
-{
-	switch (mode)
-	{
-		case INPUT_MODE_DIFFICULTY:
-		{
-			int input = inputContainer[0];
-			if (input >= static_cast<int>(GameDifficulty::Easy) && input <= static_cast<int>(GameDifficulty::Hard))
-				return true;
-		}
-
-		case INPUT_MODE_MOVE:
-		{
-			int x = inputContainer[0];
-			int y = inputContainer[1];
-			
-			if (x >= 0 && y >= 0 && x < MAX_ROWS && y < MAX_COLUMNS)
-				return true;
-		}
-
-		default:
-			break;
-	}
-	return false;
-}
-
-Point* GetPoint(int r, int c) 
-{ 
-	if (IsValidInput(INPUT_MODE_MOVE, { r, c }))
-		return sBoard[r][c];
-	return nullptr;
-}
-
 void InitializeAvailablePointsContainer()
 {
-	for (uint32 i = 0; i < MAX_ROWS; ++i)
-		for (uint32 j = 0; j < MAX_COLUMNS; ++j)
+	for (uint32 row = 0; row < MAX_ROWS; ++row)
+		for (uint32 col = 0; col < MAX_COLUMNS; ++col)
 		{
-			Point* point = new Point(i, j);
+
+			Point* point = new Point(row, col);
+			sBoard->AddPoint(point);
 			sAvailablePointsStore.push_back(point); // Punto disponible
-			sBoard[i][j] = point;
 		}
 }
 
@@ -91,21 +58,6 @@ void ShowAvailablePoints()
 {
 	for (std::vector<Point*>::iterator itr = sAvailablePointsStore.begin(); itr != sAvailablePointsStore.end(); ++itr)
 		(*itr)->ToString();
-}
-
-void CalcMinas()
-{
-	for (Point* point : sMinesStore)
-	{
-		int x = (int)point->x;
-		int y = (int)point->y;
-
-		for (int i = x - 1; i < x + 2; ++i)
-			for (int j = y - 1; j < y + 2; ++j)
-				if (Point* closePoint = GetPoint(i, j))
-					if (!closePoint->isMine)
-						closePoint->closeMines++;
-	}
 }
 
 void InitializeMinesPositions()
@@ -117,56 +69,62 @@ void InitializeMinesPositions()
 
 		Point* mine = *itr;
 		mine->isMine = true;
-		sMinesStore.push_back(mine);
+		sBoard->CalcNearPointsFromMine(mine);
+
 		sAvailablePointsStore.erase(itr);
 	}
-	CalcMinas();
+	
 }
 
-void Discover(int r, int c)
+void DiscoverPoint(Point* point)
 {
-	Point* point = GetPoint(r, c);
-	if (point->hasKnown || point->isMine) return; // Punto ya explorado no se chequea.
-	point->hasKnown = true;
+	if (point->hasKnown || point->isMine) return; // Punto ya explorado o mina no se chequea.
 
-	for (int i = r - 1; i < r + 2; ++i)
-		for (int j = c - 1; j < c + 2; ++j)
-			if (IsValidInput(INPUT_MODE_MOVE, { i, j }))
-				if (point->closeMines == 0)
-					Discover(i, j);				
+	point->hasKnown = true;
+	int pointRow = (int)point->x;
+	int pointCol = (int)point->y;
+
+	for (int row = pointRow - 1; row <= pointRow + 1; ++row)
+		for (int col = pointCol - 1; col <= pointCol + 1; ++col)
+			if (Point* nearPoint = sBoard->GetPoint(row, col))
+				if (point->closeMines == 0) // Solo los 0 pueden descubrir varias casillas
+					DiscoverPoint(nearPoint);
 }
 
-void ShowBoard()
+void Board::ShowBoard()
 {
 	std::cout << std::endl;
 	for (uint32 i = 0; i < MAX_ROWS; ++i)
 	{
 		for (uint32 j = 0; j < MAX_COLUMNS; ++j)
 		{
-			Point* point = GetPoint(i, j);
-			if (!playerMove) // No hay movimiento del jugador aun
-				std::cout << point->symbol;
+			Point* point = sBoard->GetPoint(i, j);
+
+			if (playerMove && playerMove->isMine) // El player pierde, mostramos todo el tablero.
+			{
+				if (point->isMine)
+					std::cout << '*';
+				else
+					std::cout << point->closeMines;
+			}
 			else
 			{
-				if (!playerMove->isMine)
-				{
-					if (point->hasKnown)
-						std::cout << point->closeMines;
-					else
-						std::cout << point->symbol;
-				}
+				if (point->hasKnown)
+					std::cout << point->closeMines;
 				else
-				{
-					if (point->isMine)
-						std::cout << '*';
-					else
-						std::cout << point->closeMines;
-				}
+					std::cout << '-';
 			}
 			std::cout << ' ';
 		}
 		std::cout << std::endl;
 	}
+}
+
+bool IsValidDifficulty(int difficulty)
+{
+	if (difficulty >= static_cast<uint8>(GameDifficulty::Easy) && difficulty <= static_cast<uint8>(GameDifficulty::Hard))
+		return true;
+	return false;
 }
 
 void AskUserForDifficulty()
@@ -175,13 +133,13 @@ void AskUserForDifficulty()
 
 	uint32 diff; std::cin >> diff;
 
-	if (!IsValidInput(INPUT_MODE_DIFFICULTY, { (int)diff }))
+	if (!IsValidDifficulty(diff))
 	{
 		system("cls");
 		AskUserForDifficulty();
 		return;
 	}
-	SetRowsColumnsMinesByDifficulty(static_cast<GameDifficulty>(diff));
+	SetBoardSizeByDifficulty(static_cast<GameDifficulty>(diff));
 }
 
 void Initialize()
@@ -191,16 +149,17 @@ void Initialize()
 }
 
 // Deberia ser inline ?
-inline void RegisterMoveOnBoard() { Discover(playerMove->x, playerMove->y); }
+inline void RegisterMoveOnBoard() { DiscoverPoint(playerMove); }
 
 // TODO: implementar poder meter banderas en las casillas
 void AskUserForMove()
 {
-	ShowBoard();
+	sBoard->ShowBoard();
+	
 	std::cout << "Realiza un movimiento: ";
 	uint32 x, y; std::cin >> x >> y;
 
-	Point* point = GetPoint(x, y);
+	Point* point = sBoard->GetPoint(x, y);
 
 	if (!point)
 	{
@@ -217,14 +176,14 @@ void PlayGame()
 	system("cls");
 	if (playerMove->isMine)
 	{
-		ShowBoard();
+		sBoard->ShowBoard();
 		std::cout << "HAS PERDIDO!" << std::endl;
 		system("pause");
 		return;
 	}
 	AskUserForMove();
 	RegisterMoveOnBoard();
-	ShowBoard();
+	sBoard->ShowBoard();
 	PlayGame();
 }
 
