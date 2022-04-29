@@ -1,4 +1,18 @@
 #include "Defines.h"
+#include <vector>
+
+enum class GameDifficulty : uint8
+{
+	Easy,
+	Medium,
+	Hard
+};
+
+enum InputMode
+{
+	INPUT_MODE_DIFFICULTY,
+	INPUT_MODE_MOVE
+};
 
 struct Point
 {
@@ -19,30 +33,33 @@ struct Point
 
 	void ToString()
 	{
-		std::cout << "Fila: " << x << std::endl
+		std::cout << "Punto posicionado en:" << std::endl
+			<< "Fila: " << x << ' '
 			<< "Columna: " << y << std::endl;
+
+		if (isMine)
+			std::cout << "Es mina" << std::endl;
+		else
+			std::cout << (hasKnown ? "Ha sido descubierto por el jugador" : "No ha sido descubierto por el jugador")
+			<< " y tiene " << closeMines << " minas al rededor." << "\n\n";
 	}
-};
-
-uint8 MAX_COLUMNS = 8;
-uint8 MAX_ROWS = 8;
-uint8 MAX_MINAS = 10;
-
-enum class GameDifficulty : uint8
-{
-	Easy,
-	Medium,
-	Hard
 };
 
 class Board
 {
+private:
 	std::vector<std::vector<Point*>> m_board;
 	std::vector<Point*> m_mines;
+	uint32 m_rows;
+	uint32 m_columns;
 
-	Board(uint32 rows, uint32 columns);
+public:
+	Board(uint32 rows, uint32 columns) : m_rows(rows), m_columns(columns) { m_board.resize(rows, std::vector<Point*>(columns)); }
 	void AddPoint(Point* point);
-	void CalcNearMines();
-	void GetPoint(uint32 r, uint32 c);
+	void CalcNearPointsFromMine(Point* mine);
+	Point* GetPoint(int row, int col);
 	void ShowBoard();
+	uint32 GetRows() { return m_rows; };
+	uint32 GetColums() { return m_columns; }
+	bool ContainsPoint(int row, int col);
 };
