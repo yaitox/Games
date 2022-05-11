@@ -72,17 +72,18 @@ void InitializeMinesPositions()
 		sBoard->CalcNearPointsFromMine(mine);
 
 		sAvailablePointsStore.erase(itr);
-	}
-	
+	}	
 }
 
 void DiscoverPoint(Point* point)
 {
-	if (point->hasKnown || point->isMine) return; // Punto ya explorado o mina no se chequea.
+	// Punto ya explorado o mina no se chequea.
+	if (point->hasKnown || point->isMine) 
+		return; 
 
-	point->hasKnown = true;
 	int pointRow = (int)point->x;
 	int pointCol = (int)point->y;
+	point->hasKnown = true;
 
 	for (int row = pointRow - 1; row <= pointRow + 1; ++row)
 		for (int col = pointCol - 1; col <= pointCol + 1; ++col)
@@ -122,24 +123,23 @@ void Board::ShowBoard()
 
 bool IsValidDifficulty(int difficulty)
 {
-	if (difficulty >= static_cast<uint8>(GameDifficulty::Easy) && difficulty <= static_cast<uint8>(GameDifficulty::Hard))
-		return true;
-	return false;
+	return (difficulty >= static_cast<uint8>(GameDifficulty::Easy) && difficulty <= static_cast<uint8>(GameDifficulty::Hard));
 }
 
 void AskUserForDifficulty()
 {
 	std::cout << "Seleccionar dificultad: 0 (Facil) - 1 (Medio) - 2 (Dificil) ";
 
-	uint32 diff; std::cin >> diff;
+	uint32 difficulty; std::cin >> difficulty;
 
-	if (!IsValidDifficulty(diff))
+	if (!IsValidDifficulty(difficulty))
 	{
 		system("cls");
 		AskUserForDifficulty();
 		return;
 	}
-	SetBoardSizeByDifficulty(static_cast<GameDifficulty>(diff));
+	
+	SetBoardSizeByDifficulty(static_cast<GameDifficulty>(difficulty));
 }
 
 void Initialize()
@@ -147,9 +147,6 @@ void Initialize()
 	InitializeAvailablePointsContainer();
 	InitializeMinesPositions();
 }
-
-// Deberia ser inline ?
-inline void RegisterMoveOnBoard() { DiscoverPoint(playerMove); }
 
 // TODO: implementar poder meter banderas en las casillas
 void AskUserForMove()
@@ -174,6 +171,7 @@ void AskUserForMove()
 void PlayGame()
 {
 	system("cls");
+	
 	if (playerMove->isMine)
 	{
 		sBoard->ShowBoard();
@@ -181,8 +179,9 @@ void PlayGame()
 		system("pause");
 		return;
 	}
+	
 	AskUserForMove();
-	RegisterMoveOnBoard();
+	DiscoverPoint(playerMove);
 	sBoard->ShowBoard();
 	PlayGame();
 }
