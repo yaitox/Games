@@ -2,9 +2,7 @@
 
 bool Board::ContainsPoint(int row, int col)
 {
-	if (row >= 0 && col >= 0 && row < (int)GetRows() && col < (int)GetColums())
-		return true;
-	return false;
+	return (row >= 0 && col >= 0 && row < (int)GetRows() && col < (int)GetColums());
 }
 
 void Board::AddPoint(Point* newPoint)
