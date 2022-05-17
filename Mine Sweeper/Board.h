@@ -47,13 +47,11 @@ struct Point
 
 class Board
 {
-private:
 	std::vector<std::vector<Point*>> m_board;
 	std::vector<Point*> m_mines;
 	uint32 m_rows;
 	uint32 m_columns;
 
-public:
 	Board(uint32 rows, uint32 columns) : m_rows(rows), m_columns(columns) { m_board.resize(rows, std::vector<Point*>(columns)); }
 	void AddPoint(Point* point);
 	void CalcNearPointsFromMine(Point* mine);
