@@ -151,16 +151,16 @@ void AskUserForDifficulty()
 {
 	std::cout << "Seleccionar dificultad: 0 (Facil) - 1 (Medio) - 2 (Dificil) ";
 
-	uint32 diff; std::cin >> diff;
+	uint32 difficulty; std::cin >> difficulty;
 
-	if (!IsValidDifficulty(diff))
+	if (!IsValidDifficulty(difficulty))
 	{
 		system("cls");
 		AskUserForDifficulty();
 		return;
 	}
 
-	SetBoardSizeByDifficulty(static_cast<GameDifficulty>(diff));
+	SetBoardSizeByDifficulty(static_cast<GameDifficulty>(difficulty));
 }
 
 void InitializeRandomMines()
