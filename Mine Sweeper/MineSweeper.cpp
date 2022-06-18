@@ -1,5 +1,6 @@
 ﻿#include <windows.h>
-#include "Board.h"
+// #include "Board.h"
+#include "Player.h"
 
 /****************** Console system *******************/
 CONSOLE_FONT_INFOEX m_consoleInfo;
@@ -17,6 +18,7 @@ std::vector<Point*> sMinesStore;
 Point* playerMove;
 Board* sBoard;
 uint32 m_discovered;
+// Player* p1; Future use
 
 uint8 MAX_COLUMNS;
 uint8 MAX_ROWS;
@@ -25,30 +27,7 @@ uint8 MAX_MINES;
 // Initialize the board based on difficulty.
 void SetBoardSizeByDifficulty(GameDifficulty difficulty)
 {
-	switch (difficulty)
-	{
-		case GameDifficulty::Easy:
-			MAX_COLUMNS = 8;
-			MAX_ROWS = 8;
-			MAX_MINES = 10;
-			break;
-
-		case GameDifficulty::Medium:
-			MAX_COLUMNS = 16;
-			MAX_ROWS = 16;
-			MAX_MINES = 40;
-			break;
-
-		case GameDifficulty::Hard:
-			MAX_COLUMNS = 30;
-			MAX_ROWS = 16;
-			MAX_MINES = 99;
-			break;
-
-		default:
-			break;
-	}
-	sBoard = new Board(MAX_ROWS, MAX_COLUMNS);
+	sBoard = new Board(difficulty);
 }
 
 // Random seed
@@ -242,6 +221,8 @@ void PlayGame()
 {
 	sBoard->ShowBoard();
 
+	// p1->SetMaxScore(sBoard->GetDifficulty(), m_discovered); Future use
+
 	if (!playerMove->isFlag && playerMove->isMine)
 	{
 		std::cout << "YOU LOSE!" << std::endl;
@@ -296,6 +277,7 @@ void InitializeGame()
 
 int main()
 {
+	// p1 = new Player(1, "Pepito"); Future use
 	SetConsoleSize();
 	InitializeGame();
 	return 0;

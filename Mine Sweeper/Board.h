@@ -5,7 +5,9 @@ enum class GameDifficulty : uint8
 {
 	Easy,
 	Medium,
-	Hard
+	Hard,
+
+	Max
 };
 
 enum InputMode
@@ -29,7 +31,10 @@ struct Point
 	// Es mina
 	bool isMine;
 
-	Point(uint32 i, uint32 j) : x(i), y(j), symbol('-'), closeMines(0), hasKnown(false), isMine(false) { }
+	// Sistema de flags
+	bool isFlag;
+
+	Point(uint32 i, uint32 j) : x(i), y(j), symbol('-'), closeMines(0), hasKnown(false), isMine(false), isFlag(false) { }
 
 	void ToString()
 	{
@@ -47,12 +52,15 @@ struct Point
 
 class Board
 {
+private:
 	std::vector<std::vector<Point*>> m_board;
 	std::vector<Point*> m_mines;
 	uint32 m_rows;
 	uint32 m_columns;
+	GameDifficulty m_difficulty;
 
-	Board(uint32 rows, uint32 columns) : m_rows(rows), m_columns(columns) { m_board.resize(rows, std::vector<Point*>(columns)); }
+public:
+	Board(GameDifficulty difficulty);
 	void AddPoint(Point* point);
 	void CalcNearPointsFromMine(Point* mine);
 	Point* GetPoint(int row, int col);
@@ -60,4 +68,7 @@ class Board
 	uint32 GetRows() { return m_rows; };
 	uint32 GetColums() { return m_columns; }
 	bool ContainsPoint(int row, int col);
+
+	// void SetDifficulty(GameDifficulty difficulty) { this->m_difficulty = difficulty; }
+	GameDifficulty GetDifficulty() { return m_difficulty; }
 };
