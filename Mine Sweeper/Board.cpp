@@ -1,6 +1,6 @@
 #include "Board.h"
 
-Board::Board(GameDifficulty difficulty)
+Board::Board(GameDifficulty difficulty) : m_difficulty(difficulty), m_discover(0)
 {
 	uint32 rows = 0, columns = 0, mines = 0;
 	switch (difficulty)
@@ -29,20 +29,23 @@ Board::Board(GameDifficulty difficulty)
 
 	m_rows = rows;
 	m_columns = columns;
+	m_mines = mines;
 	m_board.resize(m_rows, std::vector<Point*>(m_columns));
-	m_difficulty = difficulty;
 }
 
 bool Board::ContainsPoint(int row, int col)
 {
-	if (row >= 0 && col >= 0 && row < (int)GetRows() && col < (int)GetColums())
-		return true;
-	return false;
+	return (row >= 0 && col >= 0 && row < (int)GetRows() && col < (int)GetColums());
+}
+
+bool Board::IsBoardDicovered()
+{
+	return GetTotalDiscovered() == GetSize() - GetMines();
 }
 
 void Board::AddPoint(Point* newPoint)
 {
-	m_board[newPoint->x][newPoint->y] = newPoint;
+	m_board[newPoint->GetCoordX()][newPoint->GetCoordY()] = newPoint;
 }
 
 Point* Board::GetPoint(int row, int col)
@@ -52,12 +55,12 @@ Point* Board::GetPoint(int row, int col)
 
 void Board::CalcNearPointsFromMine(Point* mine)
 {
-	int mineRow = (int)mine->x;
-	int mineCol = (int)mine->y;
+	int mineRow = (int)mine->GetCoordX();
+	int mineCol = (int)mine->GetCoordY();
 
 	for (int row = mineRow - 1; row <= mineRow + 1; ++row)
 		for (int col = mineCol - 1; col <= mineCol + 1; ++col)
 			if (Point* nearPoint = GetPoint(row, col))
-				if (!nearPoint->isMine)
-					nearPoint->closeMines++;
+				if (!nearPoint->IsMine())
+					nearPoint->IncrementAroundMines();
 }

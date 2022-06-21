@@ -3,6 +3,7 @@
 #include "Player.h"
 
 /****************** Console system *******************/
+
 CONSOLE_FONT_INFOEX m_consoleInfo;
 HANDLE m_out = GetStdHandle(STD_OUTPUT_HANDLE);
 HANDLE m_in = GetStdHandle(STD_INPUT_HANDLE);
@@ -10,6 +11,7 @@ INPUT_RECORD m_ir;
 DWORD m_events;
 COORD m_coord;
 CONSOLE_CURSOR_INFO m_cursorInfo;
+
 /****************************************************/
 
 std::vector<Point*> sAvailablePointsStore;
@@ -17,12 +19,7 @@ std::vector<Point*> sMinesStore;
 
 Point* playerMove;
 Board* sBoard;
-uint32 m_discovered;
-// Player* p1; Future use
-
-uint8 MAX_COLUMNS;
-uint8 MAX_ROWS;
-uint8 MAX_MINES;
+// Player* player; Future use
 
 // Initialize the board based on difficulty.
 void SetBoardSizeByDifficulty(GameDifficulty difficulty)
@@ -36,8 +33,8 @@ inline void InitializeRandom() { std::srand((unsigned int)std::time(nullptr)); }
 // Store all the points on container, this container is used later to generate random mines positions.
 void InitializeAvailablePointsContainer()
 {
-	for (uint32 row = 0; row < MAX_ROWS; ++row)
-		for (uint32 col = 0; col < MAX_COLUMNS; ++col)
+	for (uint32 row = 0; row < sBoard->GetRows(); ++row)
+		for (uint32 col = 0; col < sBoard->GetColums(); ++col)
 		{
 			Point* point = new Point(row, col);
 			sBoard->AddPoint(point);
@@ -54,13 +51,13 @@ void ShowAvailablePoints()
 // Random mine positions generator
 void InitializeMinesPositions()
 {
-	for (uint8 i = 0; i < MAX_MINES; ++i)
+	for (uint8 i = 0; i < sBoard->GetMines(); ++i)
 	{
 		std::vector<Point*>::iterator itr = sAvailablePointsStore.begin();
 		std::advance(itr, std::rand() % sAvailablePointsStore.size());
 
 		Point* mine = *itr;
-		mine->isMine = true;
+		mine->InstallMine();
 		sMinesStore.push_back(mine);
 		sBoard->CalcNearPointsFromMine(mine);
 
@@ -70,53 +67,57 @@ void InitializeMinesPositions()
 
 void DiscoverPoint(Point* point)
 {
-	if (!point || point->hasKnown || point->isMine || point->isFlag) 
+	if (!point || point->IsKnown() || point->IsMine() || point->IsFlag()) 
 		return;
 
-	point->hasKnown = true;
-	++m_discovered;
-	int pointRow = (int)point->x;
-	int pointCol = (int)point->y;
+	point->Discover();
+	sBoard->IncrementDiscovered();
+	int pointRow = (int)point->GetCoordX();
+	int pointCol = (int)point->GetCoordY();
 
 	// Discover around the point
 	for (int row = pointRow - 1; row <= pointRow + 1; ++row)
 		for (int col = pointCol - 1; col <= pointCol + 1; ++col)
 			if (Point* nearPoint = sBoard->GetPoint(row, col))
-				if (point->closeMines == 0)
+				if (point->GetAroundMines() == 0)
 					DiscoverPoint(nearPoint);
 }
 
 // TODO: this must be called once the player has lost. The update board must only update on the position that has been played.
+bool stillPlaying;
+bool playerWin;
 void Board::ShowBoard()
 {
 	system("cls");
-	for (uint32 i = 0; i < MAX_ROWS; ++i)
+	for (uint32 i = 0; i < sBoard->GetRows(); ++i)
 	{
-		for (uint32 j = 0; j < MAX_COLUMNS; ++j)
+		for (uint32 j = 0; j < sBoard->GetColums(); ++j)
 		{
 			if (Point* point = sBoard->GetPoint(i, j))
 			{
-				if (point->isFlag)
+				if (stillPlaying)
 				{
-					std::cout << "F ";
-					continue;
-				}
-
-				if (playerMove && !playerMove->isFlag && playerMove->isMine)
-				{
-					if (point->isMine)
-						std::cout << '*';
-					else
-						std::cout << point->closeMines;
-				}
-				else
-				{
-					if (point->hasKnown)
-						std::cout << point->closeMines;
-
+					if (point->IsFlag())
+						std::cout << 'F';
+					else if (point->IsKnown())
+						std::cout << point->GetAroundMines();
 					else
 						std::cout << '-';
 				}
+				else
+				{
+					
+					if (point->IsMine())
+					{
+						if (playerWin)
+							std::cout << 'F';
+						else
+							std::cout << '*';
+					}	
+					else
+						std::cout << point->GetAroundMines();
+				}
+			
 				std::cout << ' ';
 			}
 		}
@@ -129,6 +130,11 @@ bool IsValidDifficulty(int difficulty)
 	return (difficulty >= static_cast<uint8>(GameDifficulty::Easy) && difficulty <= static_cast<uint8>(GameDifficulty::Hard));
 }
 
+int ConvertCharToInt(char ch)
+{
+	return ch - '0';
+}
+
 void AskUserForDifficulty()
 {
 	std::cout << "Select difficulty"							<< std::endl 
@@ -136,16 +142,16 @@ void AskUserForDifficulty()
 			  << "1 - Medium: 16 rows, 16 columns, 40 mines."	<< std::endl
 		      << "2 - Hard: 30 rows, 16 columns, 99 mines."		<< std::endl;
 
-	uint32 difficulty; std::cin >> difficulty;
+	std::string difficultyInput; std::cin >> difficultyInput; // We assume a string is given.
 
-	if (!IsValidDifficulty(difficulty))
+	if (difficultyInput.size() != 1 || !IsValidDifficulty(ConvertCharToInt(difficultyInput[0])))
 	{
 		system("cls");
 		AskUserForDifficulty();
 		return;
 	}
 
-	SetBoardSizeByDifficulty(static_cast<GameDifficulty>(difficulty));
+	SetBoardSizeByDifficulty(static_cast<GameDifficulty>(ConvertCharToInt(difficultyInput[0])));
 }
 
 void InitializeRandomMines()
@@ -177,11 +183,18 @@ Point* MakeMove(bool& isFlagMove)
 				if (!point)
 					break;
 
-				if (button & RIGHTMOST_BUTTON_PRESSED)
+				if (point->IsKnown())
+					return nullptr;
+
+				if (button == FROM_LEFT_1ST_BUTTON_PRESSED)		
+					if (point->IsFlag())
+						return nullptr; // Invalid left click if the position is marked as flag.
+
+				if (button == RIGHTMOST_BUTTON_PRESSED)
 				{
-					if (!point->hasKnown)
+					if (!point->IsKnown())
 					{
-						point->isFlag = !point->isFlag;
+						point->SetFlag();
 						isFlagMove = true;
 					}
 				}	 
@@ -219,40 +232,40 @@ void InitializeGame(); // TODO: must be inside a class?
 
 void PlayGame()
 {
+	// player->SetMaxScore(sBoard->GetDifficulty(), m_discovered); Future use
+
+	if (playerMove->IsMine())
+		stillPlaying = false;
+
+	if(sBoard->IsBoardDicovered())
+	{
+		stillPlaying = false;
+		playerWin = true;
+	}
+
 	sBoard->ShowBoard();
 
-	// p1->SetMaxScore(sBoard->GetDifficulty(), m_discovered); Future use
-
-	if (!playerMove->isFlag && playerMove->isMine)
+	if (!stillPlaying)
 	{
-		std::cout << "YOU LOSE!" << std::endl;
+		std::cout << (playerWin ? "YOU WIN!" : "YOU LOSE!") << std::endl;
 		system("pause");
+		system("cls");
 		InitializeGame();
 		return;
 	}
 
-	if (m_discovered == sBoard->GetColums() * sBoard->GetRows() - MAX_MINES) // TODO: create a function to calc this
+	else
 	{
-		for (Point* mine : sMinesStore)
-			if (!mine->isFlag)
-				mine->isFlag = true;
-
-		sBoard->ShowBoard();
-		std::cout << "YOU WIN!" << std::endl;
-		system("pause");
-		InitializeGame();
-		return;
+		AskUserForMove();
+		PlayGame();
 	}
-
-	AskUserForMove();
-	PlayGame();
 }
 
 void SetConsoleSize(DWORD font = 0, SHORT x = 0, SHORT y = 30)
 {
 	m_consoleInfo.cbSize = sizeof(m_consoleInfo);
 	m_consoleInfo.nFont = font;
-	m_consoleInfo.dwFontSize.X = x;                   // Width of each character in the font
+	m_consoleInfo.dwFontSize.X = x;                  // Width of each character in the font
 	m_consoleInfo.dwFontSize.Y = y;                  // Height
 	m_consoleInfo.FontFamily = FF_DONTCARE;
 	m_consoleInfo.FontWeight = FW_NORMAL;
@@ -261,9 +274,12 @@ void SetConsoleSize(DWORD font = 0, SHORT x = 0, SHORT y = 30)
 
 void InitializeGame()
 {
+	delete sBoard;
+	delete playerMove;
+
 	playerMove = nullptr;
 	sBoard = nullptr;
-	m_discovered = 0;
+	stillPlaying = true;
 	sAvailablePointsStore.clear();
 	sMinesStore.clear();
 
@@ -277,7 +293,7 @@ void InitializeGame()
 
 int main()
 {
-	// p1 = new Player(1, "Pepito"); Future use
+	// player = new Player(1, "Pepito"); Future use
 	SetConsoleSize();
 	InitializeGame();
 	return 0;
