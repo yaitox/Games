@@ -57,7 +57,7 @@ public:
 
 	void IncrementAroundMines() { _aroundMines++; }
 	void InstallMine() { _isMine = true; }
-	void Discover() { _isKnown = true; } // Sets _isKnown = true
+	void Discover() { _isKnown = true; }
 	void SetFlag() { _isFlag = !_isFlag; }
 };
 
