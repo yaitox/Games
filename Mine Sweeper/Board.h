@@ -10,12 +10,6 @@ enum class GameDifficulty : uint8
 	Max
 };
 
-enum InputMode
-{
-	INPUT_MODE_DIFFICULTY,
-	INPUT_MODE_MOVE
-};
-
 struct Point
 {
 private:
