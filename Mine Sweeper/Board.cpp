@@ -33,24 +33,9 @@ Board::Board(GameDifficulty difficulty) : m_difficulty(difficulty), m_discover(0
 	m_board.resize(m_rows, std::vector<Point*>(m_columns));
 }
 
-bool Board::ContainsPoint(int row, int col)
-{
-	return (row >= 0 && col >= 0 && row < (int)GetRows() && col < (int)GetColums());
-}
-
-bool Board::IsBoardDicovered()
-{
-	return GetTotalDiscovered() == GetSize() - GetMines();
-}
-
 void Board::AddPoint(Point* newPoint)
 {
 	m_board[newPoint->GetCoordX()][newPoint->GetCoordY()] = newPoint;
-}
-
-Point* Board::GetPoint(int row, int col)
-{
-	return (ContainsPoint(row, col) ? m_board[row][col] : nullptr);
 }
 
 void Board::CalcNearPointsFromMine(Point* mine)
@@ -63,4 +48,19 @@ void Board::CalcNearPointsFromMine(Point* mine)
 			if (Point* nearPoint = GetPoint(row, col))
 				if (!nearPoint->IsMine())
 					nearPoint->IncrementAroundMines();
+}
+
+Point* Board::GetPoint(int row, int col)
+{
+	return (ContainsPoint(row, col) ? m_board[row][col] : nullptr);
+}
+
+bool Board::IsBoardDicovered()
+{
+	return GetTotalDiscovered() == GetSize() - GetMines();
+}
+
+bool Board::ContainsPoint(int row, int col)
+{
+	return (row >= 0 && col >= 0 && row < (int)GetRows() && col < (int)GetColums());
 }

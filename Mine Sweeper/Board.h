@@ -67,16 +67,20 @@ private:
 
 public:
 	Board(GameDifficulty difficulty);
+
 	void AddPoint(Point* point);
 	void CalcNearPointsFromMine(Point* mine);
 	void ShowBoard();
 	void IncrementDiscovered() { ++m_discover; }
+
 	Point* GetPoint(int row, int col);
+
 	uint32 GetRows() { return m_rows; };
 	uint32 GetColums() { return m_columns; }
 	uint32 GetMines() { return m_mines; }
 	uint32 GetTotalDiscovered() { return m_discover; }
 	uint32 GetSize() { return GetRows() * GetColums(); }
+
 	bool IsBoardDicovered();
 	bool ContainsPoint(int row, int col);
 
