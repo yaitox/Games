@@ -1,5 +1,7 @@
 #include "Defines.h"
 #include <vector>
+#include "SFML/Graphics/RenderWindow.hpp"
+#include "SFML/Graphics/Sprite.hpp"
 
 enum class GameDifficulty : uint8
 {
@@ -53,36 +55,40 @@ public:
 	void InstallMine() { _isMine = true; }
 	void Discover() { _isKnown = true; }
 	void SetFlag() { _isFlag = !_isFlag; }
+	void RemoveFlag() { _isFlag = false; }
 };
 
 class Board
 {
 private:
-	std::vector<std::vector<Point*>> m_board;
-	uint32 m_rows;
-	uint32 m_columns;
-	uint32 m_mines;
-	uint32 m_discover;
-	GameDifficulty m_difficulty;
+	std::vector<std::vector<Point*>> _board;
+	uint32 _rows;
+	uint32 _columns;
+	uint32 _mines;
+	uint32 _discoveredPoints;
+	GameDifficulty _difficulty;
 
 public:
 	Board(GameDifficulty difficulty);
 
 	void AddPoint(Point* point);
 	void CalcNearPointsFromMine(Point* mine);
-	void ShowBoard();
-	void IncrementDiscovered() { ++m_discover; }
+	void IncrementDiscovered() { _discoveredPoints++; }
+	void GetNearPoints(std::vector<Point*>& nearPoints, Point* point);
+	void DiscoverPoint(Point* point);
+	void DiscoverTheEntireMap();
+	void Update(sf::RenderWindow& window, sf::Sprite& sprite);
 
 	Point* GetPoint(int row, int col);
 
-	uint32 GetRows() { return m_rows; };
-	uint32 GetColums() { return m_columns; }
-	uint32 GetMines() { return m_mines; }
-	uint32 GetTotalDiscovered() { return m_discover; }
+	uint32 GetRows() { return _rows; };
+	uint32 GetColums() { return _columns; }
+	uint32 GetTotalMines() { return _mines; }
+	uint32 GetTotalDiscovered() { return _discoveredPoints; }
 	uint32 GetSize() { return GetRows() * GetColums(); }
 
 	bool IsBoardDicovered();
 	bool ContainsPoint(int row, int col);
 
-	GameDifficulty GetDifficulty() { return m_difficulty; }
+	GameDifficulty GetDifficulty() { return _difficulty; }
 };
