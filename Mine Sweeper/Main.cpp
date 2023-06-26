@@ -1,5 +1,5 @@
 #include <SFML/Graphics.hpp>
-#include "Player.h"
+#include "Board.h"
 
 std::vector<Point*> sAvailablePointsStore;
 std::vector<Point*> sMinesStore;
